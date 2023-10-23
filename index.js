@@ -36,7 +36,7 @@ app.get('/', (req, res) => {
       } else {
         const values = response.data.values;
         const value = values[0][0]; // Assuming there is only one value in the specified range
-        res.send(`Value: ${value}`);
+        res.json({ value });
       }
     }
   );
