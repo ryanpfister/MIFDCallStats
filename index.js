@@ -93,8 +93,8 @@ app.get('/', (req, res) => {
           const values = response?.data?.values;
           if (values && values.length > 0 && values[0].length > 0) {
             const value = values[0][0];
-            res.send(`Value: ${value}`);
-          } else {
+            res.json({ value: newValue });
+        } else {
             res.status(500).send('No value found in the specified range');
           }
         }
