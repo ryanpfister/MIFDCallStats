@@ -130,7 +130,7 @@ app.post('/addcall', (req, res) => {
           console.error('The API returned an error:', err);
           res.status(500).send('Error updating data in Google Sheets');
         } else {
-          res.send(`Value increased to: ${newValue}`);
+        res.json({ value: newValue });
         }
       });
     }
