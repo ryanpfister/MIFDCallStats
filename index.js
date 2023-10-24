@@ -1,139 +1,74 @@
 const express = require('express');
-const { google } = require('googleapis');
-const fs = require('fs');
+const { MongoClient } = require('mongodb');
+const debug = require('debug')('app:server');
 
-
-// Create an instance of the Express.js app
 const app = express();
 const port = 80;
+const connectionURL = 'mongodb+srv://mifd413:k72CBvWHm4TvN3h8@calldata.vbgrvc3.mongodb.net/CallData?retryWrites=true&w=majority';
+const databaseName = 'CallData';
+const collectionName = 'MIFDCalls';
 
-// Define the Google Sheets file ID and range
-const spreadsheetId = '1YwHE1GA2HrAoGCUBg7svh_Ol7-N3R1kRB9XkEOqEx90';
-const range = 'Sheet1!A1:A1'; // Assuming the value is in cell A1
+let db;
+let collection;
 
-// Load the credentials file
-const credentials = require('./credentials.json');
+// Connect to MongoDB
+MongoClient.connect(connectionURL, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then((client) => {
+    db = client.db(databaseName);
+    collection = db.collection(collectionName);
+    console.log('Connected to MongoDB');
+    app.listen(port, () => {
+      console.log(`Server is listening on port ${port}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Error connecting to MongoDB:', err);
+    process.exit(1);
+  });
 
-// Create an OAuth2 client using the credentials
-const oAuth2Client = new google.auth.OAuth2(
-  credentials.client_id,
-  credentials.client_secret,
-  credentials.redirect_uris[0]
-);
-
-// Check if the token.json file exists
-if (fs.existsSync('token.json')) {
-  // Load the token from the file
-  const token = fs.readFileSync('token.json');
-  oAuth2Client.setCredentials(JSON.parse(token));
-}
-
-// Generate the authentication URL and log it
-const authUrl = oAuth2Client.generateAuthUrl({
-  access_type: 'offline',
-  scope: [
-    'https://www.googleapis.com/auth/spreadsheets.readonly',
-    'https://www.googleapis.com/auth/spreadsheets',
-  ],
+// Handle GET request to '/'
+app.get('/', (req, res) => {
+  collection
+    .findOne({})
+    .then((result) => {
+      if (result) {
+        res.json({ value: result.value });
+      } else {
+        res.status(404).send('No data found');
+      }
+    })
+    .catch((err) => {
+      console.error('Error retrieving data from MongoDB:', err);
+      res.status(500).send('Error fetching data from MongoDB');
+    });
 });
-console.log('Authorize this app by visiting this URL:', authUrl);
 
-// Start the server
-app.listen(80, () => {
-    console.log(`Server is listening on port`);
+// Handle POST request to '/addcall'
+app.post('/addcall', (req, res) => {
+    collection
+      .findOne({}, { value: 1 })
+      .then((result) => {
+        let newValue = 1;
+        if (result) {
+          newValue = result.value + 1;
+          collection.updateOne({}, { $set: { value: newValue } })
+            .then(() => res.json({ value: newValue }))
+            .catch((err) => {
+              console.error('Error updating data in MongoDB:', err);
+              res.status(500).send('Error updating data in MongoDB');
+            });
+        } else {
+          collection.insertOne({ value: 1 })
+            .then(() => res.json({ value: newValue }))
+            .catch((err) => {
+              console.error('Error inserting data into MongoDB:', err);
+              res.status(500).send('Error inserting data into MongoDB');
+            });
+        }
+      })
+      .catch((err) => {
+        console.error('Error retrieving data from MongoDB:', err);
+        res.status(500).send('Error retrieving data from MongoDB');
+      });
   });
   
-// Create a route to handle the OAuth2 callback
-app.get('/auth/callback', (req, res) => {
-  const code = req.query.code;
-  oAuth2Client.getToken(code, (err, token) => {
-    if (err) {
-      console.error('Error retrieving access token:', err);
-      res.status(500).send('Error retrieving access token');
-      return;
-    }
-    oAuth2Client.setCredentials(token);
-    fs.writeFileSync('token.json', JSON.stringify(token));
-    res.redirect('/');
-  });
-});
-
-app.get('/callback', (req, res) => {
-    const code = req.query.code;
-    // Use the code to exchange for access and refresh tokens with the Google API
-    // Handle the tokens and store them securely for further API requests
-    res.send('Authorization successful! You may close this page.');
-  });
-
-  app.get('/auth', (req, res) => {
-    const authUrl = oAuth2Client.generateAuthUrl({
-      access_type: 'offline',
-      scope: [
-        'https://www.googleapis.com/auth/spreadsheets.readonly',
-        'https://www.googleapis.com/auth/spreadsheets',
-      ],
-      redirect_uri: 'http://localhost:80/callback',
-    });
-    res.redirect(authUrl);
-  });
-
-app.get('/', (req, res) => {
-    // Call the Google Sheets API to get the values
-    const sheets = google.sheets({ version: 'v4', auth: oAuth2Client });
-    sheets.spreadsheets.values.get(
-      {
-        spreadsheetId,
-        range,
-      },
-      (err, response) => {
-        if (err) {
-          console.error('The API returned an error:', err);
-          res.status(500).send('Error fetching data from Google Sheets');
-        } else {
-          const values = response?.data?.values;
-          if (values && values.length > 0 && values[0].length > 0) {
-            const value = values[0][0];
-            res.json({ value: newValue });
-        } else {
-            res.status(500).send('No value found in the specified range');
-          }
-        }
-      }
-    );
-  });
-
-// Create a POST route to increase the value
-app.post('/addcall', (req, res) => {
-  // Call the Google Sheets API to get the current value
-  const sheets = google.sheets({ version: 'v4', auth: oAuth2Client });
-  sheets.spreadsheets.values.get({
-    spreadsheetId,
-    range
-  }, (err, response) => {
-    if (err) {
-      console.error('The API returned an error:', err);
-      res.status(500).send('Error fetching data from Google Sheets');
-    } else {
-      const value = parseInt(response.data.values[0][0]);
-      const newValue = value + 1;
-
-      // Call the Google Sheets API to update the value
-      sheets.spreadsheets.values.update({
-        spreadsheetId,
-        range,
-        valueInputOption: 'RAW',
-        resource: {
-          values: [[newValue]]
-        }
-      }, (err, response) => {
-        if (err) {
-          console.error('The API returned an error:', err);
-          res.status(500).send('Error updating data in Google Sheets');
-        } else {
-        res.json({ value: newValue });
-        }
-      });
-    }
-  });
-});
-
