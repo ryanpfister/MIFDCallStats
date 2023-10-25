@@ -4,12 +4,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function displayCalls(calls) {
     callsList.innerHTML = '';
-
-    calls.forEach(call => {
+  
+    // Sort the calls in descending order based on the call ID
+    const sortedCalls = calls.sort((a, b) => b.incnum - a.incnum);
+  
+    sortedCalls.forEach(call => {
       const callItem = document.createElement('li');
       callItem.innerHTML = `
         <div>
           <p><strong>Call ID:</strong> ${call.incnum}</p>
+          <p><strong>Call Time</strong> ${call.datetimealarm}</p>
           <p><strong>Call Type:</strong> ${call.dispcalltypedescr} - ${call.dispsubtypedescr}</p>
           <p><strong>Location Name:</strong> ${call.sitename}</p>
           <p><strong>Location:</strong> ${call.address} - ${call.city} - ${call.state} - ${call.zip}</p>
@@ -17,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <hr>
       `;
-
+  
       callsList.appendChild(callItem);
     });
   }

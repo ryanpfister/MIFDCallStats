@@ -67,7 +67,7 @@ MongoClient.connect(connectionURL, { useNewUrlParser: true, useUnifiedTopology: 
                 .post('http://104.167.248.66:8866/dispcall.json.php', 'persid=539&fdid=52068')
                 .then((response) => {
                     // Check the structure of the response
-                    //console.log(response.data);
+                    console.log(response.data);
                     const newCalls = response.data.dispcall;
 
                     if (!Array.isArray(newCalls)) {
@@ -120,12 +120,11 @@ MongoClient.connect(connectionURL, { useNewUrlParser: true, useUnifiedTopology: 
 
 // Handle calls request
 app.get('/api/calls', (req, res) => {
-    const limit = 10; // Number of recent calls to fetch
+    const limit = parseInt(req.query.limit) || 100; // Number of recent calls to fetch
   
     collection
       .find()
       .sort({ call_id: -1 }) // Sort in descending order of call_id to get the most recent calls
-      .limit(limit)
       .toArray()
       .then((calls) => {
         res.json(calls);
@@ -167,6 +166,32 @@ app.get('/api/stats', (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
       });
   });
+
+  app.get('/api/most-recent-call', (req, res) => {
+    collection
+      .find()
+      .sort({ incnum: -1 }) // Sort in descending order based on the call ID to get the most recent call first
+      .limit(1)
+      .toArray()
+      .then(([mostRecentCall]) => {
+        let mostRecentIncnum = mostRecentCall ? mostRecentCall.incnum.toString() : null;
+  
+        if (mostRecentIncnum) {
+          const currentYear = new Date().getFullYear().toString();
+          const placeholderDigits = currentYear.slice(0, 4);
+          mostRecentIncnum = mostRecentIncnum.replace(placeholderDigits, '');
+          mostRecentIncnum = parseInt(mostRecentIncnum);
+        }
+  
+        res.json({ mostRecentIncnum });
+      })
+      .catch((error) => {
+        console.error('Error retrieving most recent call:', error);
+        res.status(500).json({ error: 'Internal server error' });
+      });
+  });
+  
+  
   
 
 
