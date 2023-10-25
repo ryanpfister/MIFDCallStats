@@ -1,0 +1,55 @@
+/* General Styles */
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1, h2 {
+  text-align: center;
+}
+
+/* Call Statistics */
+#callStats {
+  margin-bottom: 40px;
+}
+
+#callStats p {
+  margin: 10px 0;
+}
+
+/* Call Predictions */
+#callPredictions {
+  margin-bottom: 40px;
+}
+
+/* Latest Calls */
+#latestCalls {
+  margin-bottom: 40px;
+}
+
+#callList li {
+  margin: 10px 0;
+}
+
+#mapLatestCalls {
+  width: 100%;
+  height: 400px;
+}
+
+/* Active Calls Map */
+#activeCallsMap {
+  margin-bottom: 40px;
+}
+
+#activeCallsMapContainer {
+  width: 100%;
+  height: 500px;
+}
