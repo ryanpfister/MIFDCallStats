@@ -1,16 +1,36 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Call Dashboard</title>
-  </head>
-  <body>
-    <h1>Recent Calls</h1>
-    <ul id="calls-list"></ul>
+<head>
+  <meta charset="UTF-8">
+  <title>Call Dashboard</title>
+  <style>
+    /* Set the height of the map container */
+    #map {
+      height: 400px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Recent Calls</h1>
+  <ul id="calls-list"></ul>
 
-    <h1>Call Statistics</h1>
-    <div id="stats-container"></div>
+  <h1>Call Statistics</h1>
+  <div id="stats-container"></div>
 
-    <script src="main.js"></script>
-  </body>
+  <h1>Call Predictions</h1>
+  <div id="call-predictions">
+    <ul id="predictions-list"></ul>
+  </div>
+
+  <!-- Add a container for the map -->
+  <div id="map"></div>
+
+  <script>
+    // Define the callsList, statsContainer, and predictionsList variables
+    const callsList = document.getElementById('calls-list');
+    const statsContainer = document.getElementById('stats-container');
+    const predictionsList = document.getElementById('predictions-list');
+  </script>
+  <script src="main.js"></script>
+</body>
 </html>
